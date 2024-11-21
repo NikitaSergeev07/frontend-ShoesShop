@@ -1,96 +1,212 @@
 <template>
   <div class="layout-container">
     <AppHeader></AppHeader>
+    <div class="page-content">
+      <div class="header-section">
+        <h1 class="title">Добро пожаловать в наш каталог!
+        </h1>
 
-    <div class="home-page">
-      <h1>Привет!</h1>
+        <div class="controls-container">
+          <select class="select-sort" v-model="sortParameter">
+            <option value="name">По названию</option>
+            <option value="price_asc">По цене (дешевые)</option>
+            <option value="price_desc">По цене (дорогие)</option>
+          </select>
 
-      <p class="welcome-text">
-        Добро пожаловать в наш семейный дневник эмоций!<br><br>
-        Здесь мы будем делиться нашими чувствами, переживаниями и радостями — большими и маленькими. Этот дневник — наше место для искренности, поддержки и взаимопонимания. Он помогает нам фиксировать моменты, которые придают жизни смысл, учиться понимать друг друга и ценить каждый день, проведенный вместе.<br><br>
-        Каждый день — новая страница, на которой мы можем записать наши эмоции, впечатления и важные события. Пусть этот дневник станет хранителем наших воспоминаний и путеводителем на пути к гармонии и счастью.<br><br>
-        Каким был твой сегодняшний день?
-      </p>
 
-      <div class="button-container">
-        <button class="btn btn-fight">
-          <router-link to="/detailed" class="router"> Детальный анализ</router-link>
-        </button>
+          <div class="search-container">
+            <input
+                type="text"
+                v-model="searchQuery"
+                class="search-input"
+                placeholder="Поиск..."
+                @keydown.enter="performSearch"
+            />
+            <div class="search-icon" @click="performSearch">
+              <img src="/search.svg" alt="search" />
+            </div>
+          </div>
+          <button class="reset-button" @click="resetSearch">Сброс</button>
+        </div>
+      </div>
 
-        <button class="btn btn-bright">
-          <router-link to="/selector" class="router"> Поверхностный анализ</router-link>
-        </button>
+      <div class="product-grid">
+        <product-card
+            v-for="(product) in products"
+            :key="product.id"
+            :title="product.title"
+            :price="product.price"
+            :img="product.image_urls.length > 0 ? product.image_urls[0] : '../public/favicon.ico'"
+            :product-id="product.id"
+        />
       </div>
     </div>
-
     <AppFooter></AppFooter>
   </div>
 </template>
 
 <script>
 import AppHeader from "@/components/AppHeader.vue";
+import ProductCard from "@/components/ProductCard.vue";
 import AppFooter from "@/components/AppFooter.vue";
+import axios from "axios";
 
 export default {
-  components: {AppFooter, AppHeader},
-}
+  components: { AppFooter, AppHeader, ProductCard },
+  data() {
+    return {
+      userId: null,
+      products: [],
+      searchQuery: '',
+      sortParameter: 'name',
+    };
+  },
+  watch: {
+    sortParameter() {
+      this.updateProducts();
+    },
+  },
+
+  created() {
+    this.userId = sessionStorage.getItem('userId');
+    this.updateProducts();
+  },
+  methods: {
+    async updateProducts() {
+      try {
+        const queryParam = this.searchQuery.trim()
+            ? `query=${this.searchQuery}`
+            : '';
+        const sortParam = `sort=${this.sortParameter}`;
+
+        const response = await axios.get(
+            `http://localhost:8000/api/items/search?${queryParam}&${sortParam}`
+        );
+        console.log(response.data);
+        this.products = response.data;
+      } catch (error) {
+        console.error('Ошибка при обновлении списка продуктов:', error);
+      }
+    },
+    async performSearch() {
+      await this.updateProducts();
+    },
+    resetSearch() {
+      this.searchQuery = '';
+      this.sortParameter = 'name';
+      this.updateProducts();
+    },
+  },
+};
+
 </script>
 
+
 <style scoped>
+
+.user-id {
+  font-size: 1.2rem;
+  color: #6b7280; /* Серый цвет */
+  margin-left: 0.5rem;
+}
+
 .layout-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-
-
-.navbar__link:hover {
-  background-color: #f2a1d1; /* Slightly contrasting hover effect */
+.page-content {
+  padding: 2.5rem; /* заменяет p-10 */
 }
 
-.home-page {
-  padding: 20px;
-  text-align: center;
-  flex-grow: 1;
-}
-
-.welcome-text {
-  font-size: 1.2rem;
-  color: #666666; /* Soft gray text color */
-  margin-bottom: 30px;
-}
-
-.button-container {
+.header-section {
   display: flex;
-  justify-content: center;
-  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem; /* заменяет mb-10 */
 }
 
-.btn {
-  padding: 12px 24px;
+.title {
+  font-size: 2rem; /* заменяет text-3xl */
+  font-weight: bold;
+}
+
+.controls-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* заменяет gap-4 */
+}
+
+.select-sort {
+  padding: 0.5rem 0.75rem; /* заменяет py-2 px-3 */
+  border: 1px solid #d1d5db; /* заменяет border-gray-200 */
+  border-radius: 0.375rem; /* заменяет rounded-md */
+  outline: none;
+}
+
+.select-sort:focus {
+  border-color: #9ca3af; /* заменяет focus:border-gray-400 */
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db; /* Добавлен бордер */
+  border-radius: 0.375rem;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem;
+  padding-left: 2.5rem; /* для иконки */
   border: none;
-  font-size: 1rem;
+  outline: none;
+  height: 2.5rem; /* Высота для выравнивания */
+}
+
+.search-input:focus {
+  border-color: #9ca3af;
+}
+
+.search-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.75rem;
   cursor: pointer;
-  border-radius: 8px;
+  transition: transform 0.2s ease-in-out;
+}
+.search-icon:hover {
+  transform: scale(1.1);
 }
 
-.btn-bright {
-  background-color: #E9CEC1; /* Bright pastel blue */
-  color: white;
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 карточки в строке */
+  gap: 2.5rem; /* Зазор между карточками */
 }
 
-.btn-fight {
-  background-color: #a8d0e6; /* Bright pastel blue */
-  color: white;
+.reset-button {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6; /* светлый цвет */
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
 }
 
-.btn-light {
-  background-color: #f0e4d7; /* Calm pastel beige */
-  color: #333;
+.reset-button:hover {
+  background-color: #e5e7eb; /* чуть темнее при наведении */
 }
 
-.footer p {
-  margin: 0;
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr); /* заменяет sm:grid-cols-2 */
+  }
+}
+
+@media (min-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr); /* заменяет md:grid-cols-3 */
+  }
 }
 </style>

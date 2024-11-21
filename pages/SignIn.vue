@@ -34,7 +34,9 @@
 
 <script>
 import axios from 'axios'; // Импортируем axios для HTTP-запросов
-import { isValidEmail, isValidPassword } from '../utils/validation.js';
+import { isValidEmail, isValidPassword } from '@/utils/validation.js';
+import store from "../store";
+
 
 export default {
   data() {
@@ -92,18 +94,29 @@ export default {
       const emailLength = this.form.email.length > 0;
       const passwordLength = this.form.password.length > 0;
 
-      if ((emailLength, passwordLength) && getInputAll.length === 0) {
+      if (emailLength && passwordLength && getInputAll.length === 0) { // Исправлена ошибка в условии
         try {
           const response = await axios.post('http://localhost:8000/auth/sign-in', {
             Email: this.form.email,
             Password: this.form.password,
           });
 
-          // Если запрос успешен, перенаправляем на страницу selector
+          const token = response.data.token;
+
+          // Сохраняем токен в sessionStorage после успешной авторизации
+          sessionStorage.setItem('authToken', token);
+
+          // userId
+          const userId = response.data.id; // Убедитесь, что ключ совпадает с ответом бэкенда
+
+          // Vuex action вызов
+          store.dispatch('login', userId);
+
+          sessionStorage.setItem('userId', userId);
+
           if (response.status === 200) {
             this.$router.push('/home');
           } else {
-            // Обработка ошибки (например, неверные данные)
             alert('Invalid credentials');
           }
         } catch (error) {

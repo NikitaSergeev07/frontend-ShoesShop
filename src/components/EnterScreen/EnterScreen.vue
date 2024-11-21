@@ -1,7 +1,7 @@
 <template>
     <div class="enter-screen wrapper">
-        <h1 class="headline enter-screen__headline"> Ваш семейный <br> дневник эмоций</h1>
-        <p class="subtitle enter-screen__subtitle">Там где тепло семьи в каждом мгновении</p>
+        <h1 class="headline enter-screen__headline"> Сити-класс <br> магазин обуви</h1>
+        <p class="subtitle enter-screen__subtitle">Шагни к стилю и комфорту — твоя идеальная пара ждет тебя!</p>
 
         <div class="enter-screen__links">
             <button class="enter-screen__link-signup"><router-link to="/sign-up" class="router"> Регистрация
@@ -10,7 +10,7 @@
         </div>
 
         <div class="enter-screen__image">
-            <img src="../../assets/img/home.png" alt="" />
+            <img src="../../assets/img/woman.svg" alt="" />
         </div>
     </div>
 </template>

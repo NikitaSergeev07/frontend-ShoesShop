@@ -4,16 +4,24 @@
 
     <div class="form-container">
       <form class="form sign-up__form" @submit.prevent="signUp">
-        <!-- Поля формы -->
         <div class="form-group">
           <label class="input-wrapper">Полное имя
             <i class="bi bi-question-circle-fill" v-tooltip data-bs-toggle="tooltip" data-bs-placement="bottom"
-               data-bs-title="Field must contains 2 words, 3+ symbols"></i>
+               data-bs-title="Поле должно содержать 2 слова, каждое из которых состоит из 3 и более символов"></i>
             <input type="text" class="form-control" v-model="form.username" name="username" @blur="validateName"
                    :class="{ error: error.username }" />
           </label>
           <p v-if="error.username" class="error-message"> Введите имя правильно</p>
         </div>
+
+        <div class="form-group">
+          <label class="input-wrapper">Номер телефона
+            <input type="tel" class="form-control" v-model="form.phoneNumber" name="phoneNumber" @blur="validatePhoneNumber"
+                   :class="{ error: error.phoneNumber }" />
+          </label>
+          <p v-if="error.phoneNumber" class="error-message"> Введите корректный номер телефона </p>
+        </div>
+
 
         <div class="form-group">
           <label class="input-wrapper">Почта
@@ -26,7 +34,7 @@
         <div class="form-group">
           <label class="input-wrapper">Пароль
             <i class="bi bi-question-circle-fill" v-tooltip data-bs-toggle="tooltip" data-bs-placement="bottom"
-               data-bs-title="Field must contains 8+ symbols, 1 special and 2 capital letters"></i>
+               data-bs-title="Поле должно содержать 8 и более символов, включая 1 специальный символ и 2 заглавные буквы"></i>
             <input type="password" class="form-control" v-model="form.password" name='password'
                    @blur="validatePassword" :class="{ error: error.password }" />
             <i class="bi bi-eye-slash icon" @click="setVisibility"></i>
@@ -43,7 +51,7 @@
           <p v-if="error.repeatPassword" class="error-message"> Пароли не совпадают</p>
         </div>
 
-        <button type="submit" class="btn form__button">Войти </button>
+        <button type="submit" class="btn form__button">Зарегистрироваться </button>
       </form>
     </div>
 
@@ -56,7 +64,7 @@
 
 
 <script>
-import { isValidName, isValidEmail, isValidPassword, isValidRepeatPasswod } from '../utils/validation.js';
+import { isValidName, isValidEmail, isValidPassword, isValidRepeatPasswod } from '@/utils/validation.js';
 import axios from 'axios';
 
 export default {
@@ -67,13 +75,16 @@ export default {
         email: '',
         password: '',
         repeatPassword: '',
+        phoneNumber: '',
       },
       error: {
         username: false,
         email: false,
         password: false,
         repeatPassword: false,
-      }
+        phoneNumber: false,
+      },
+
     }
   },
   methods: {
@@ -110,6 +121,18 @@ export default {
         !isValidName(this.form[attr]) ? this.addClassInvalid(attr) : this.removeClassInvalid(attr);
       }
     },
+    validatePhoneNumber() {
+      const attr = 'phoneNumber';
+
+      this.form[attr] = this.form[attr].replace('+', ''); // Убираем '+'
+      if (this.form[attr].startsWith('7')) {
+        this.form[attr] = '8' + this.form[attr].slice(1); // Меняем 7 на 8
+      }
+      const phoneRegex = /^[0-9]{11,12}$/;
+      if (this.form[attr].length !== 0) {
+        !phoneRegex.test(this.form[attr]) ? this.addClassInvalid(attr) : this.removeClassInvalid(attr);
+      }
+    },
     validateEmail() {
       const attr = 'email';
       if (this.form[attr].length !== 0) {
@@ -131,6 +154,7 @@ export default {
     },
     async signUp() {
       this.validateName();
+      this.validatePhoneNumber();
       this.validateEmail();
       this.validatePassword();
       this.validateConfirmPassword();
@@ -139,12 +163,13 @@ export default {
       if (!hasErrors && this.form.username && this.form.email && this.form.password && this.form.repeatPassword) {
         try {
           const response = await axios.post('http://localhost:8000/auth/sign-up', {
-            Email: this.form.email,
-            Name: this.form.username,
-            Password: this.form.password
+            email: this.form.email,
+            phone_number: this.form.phoneNumber,
+            name: this.form.username,
+            password: this.form.password,
           });
           console.log('Sign-up successful:', response.data);
-          this.$router.push('/home');
+          this.$router.push('/sign-in');
         } catch (error) {
           console.error('Error during sign-up:', error.response ? error.response.data : error.message);
         }
